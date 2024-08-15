@@ -1,72 +1,88 @@
-module "lambda_iam_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role"
-  version = "5.0.0"
-
-  name = "${var.project_name}-${var.environment}-lambda-exec-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
-
-  policies = [{
-    name   = "lambda-policy"
-    policy = jsonencode({
-      Version = "2012-10-17",
-      Statement = [
-        {
-          Effect   = "Allow"
-          Action   = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
-          Resource = [module.input_queue.sqs_queue_arn, module.output_queue.sqs_queue_arn]
-        },
-        {
-          Effect   = "Allow"
-          Action   = ["rds-data:ExecuteStatement", "rds-data:BatchExecuteStatement"]
-          Resource = "*"
-        }
-      ]
-    })
-  }]
-}
-
-module "telemetry_processor_lambda" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "4.8.0"
-
+resource "aws_lambda_function" "telemetry_processor_lambda" {
   function_name = "${var.project_name}-${var.environment}-telemetryProcessor"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
-  source_path   = "path_to_your_lambda_zip/telemetry_processor.zip"
+  role          = aws_iam_role.lambda_exec_role.arn
+  source_code_hash = filebase64sha256("path_to_your_lambda_zip/telemetry_processor.zip")
+  filename      = "path_to_your_lambda_zip/telemetry_processor.zip"
 
-  environment_variables = {
-    INPUT_QUEUE_URL  = module.input_queue.sqs_queue_url
-    OUTPUT_QUEUE_URL = module.output_queue.sqs_queue_url
-    DB_HOST          = aws_rds_instance.db_instance.endpoint
-    DB_NAME          = var.db_name
-    DB_USER          = var.db_username
-    DB_PASSWORD      = var.db_password
+  environment {
+    variables = {
+      INPUT_QUEUE_URL  = module.input_queue.queue_url
+      OUTPUT_QUEUE_URL = module.output_queue.queue_url
+      DB_HOST          = aws_rds_instance.db_instance.endpoint
+      DB_NAME          = var.db_name
+      DB_USER          = var.db_username
+      DB_PASSWORD      = var.db_password
+    }
   }
-
-  role = module.lambda_iam_role.iam_role_arn
 }
 
-module "acknowledgment_handler_lambda" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "4.8.0"
-
+resource "aws_lambda_function" "acknowledgment_handler_lambda" {
   function_name = "${var.project_name}-${var.environment}-acknowledgmentHandler"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
-  source_path   = "path_to_your_lambda_zip/acknowledgment_handler.zip"
+  role          = aws_iam_role.lambda_exec_role.arn
+  source_code_hash = filebase64sha256("path_to_your_lambda_zip/acknowledgment_handler.zip")
+  filename      = "path_to_your_lambda_zip/acknowledgment_handler.zip"
 
-  environment_variables = {
-    OUTPUT_QUEUE_URL = module.output_queue.sqs_queue_url
+  environment {
+    variables = {
+      OUTPUT_QUEUE_URL = module.output_queue.queue_url
+    }
   }
+}
 
-  role = module.lambda_iam_role.iam_role_arn
+resource "aws_iam_role" "lambda_exec_role" {
+  name = "${var.project_name}-${var.environment}-lambda-exec-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.project_name}-${var.environment}-lambda-policy"
+  description = "IAM policy for Lambda to access SQS and RDS"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ],
+        Resource = [
+          module.input_queue.sqs_queue_arn,
+          module.output_queue.sqs_queue_arn
+        ]
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "rds-data:ExecuteStatement",
+          "rds-data:BatchExecuteStatement"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = aws_iam_policy.lambda_policy.arn
 }
