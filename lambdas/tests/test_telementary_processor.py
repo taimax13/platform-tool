@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 import pytest
-from moto import mock_sqs, mock_rds
+
 
 from lambdas.telementary_processor_sqs_postgress_psg import lambda_handler
 

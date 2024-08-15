@@ -57,3 +57,21 @@ This platform application handles incoming telemetry data, processes it, and pro
    ```bash
    git clone https://github.com/your-username/platform-application.git
    cd platform-application
+### Plan and apply terraform 
+```
+ terraform plan -var-file="dev.tfvars"
+ terraform apply -var-file="dev.tfvars"
+
+```
+
+the output 
+```
+db_endpoint = "localhost.localstack.cloud:4510"
+input_queue_url = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/platform-app-dev-input-queue"
+lambda_acknowledgment_handler_arn = "arn:aws:lambda:us-east-1:000000000000:function:platform-app-dev-acknowledgmentHandler"
+lambda_telemetry_processor_arn = "arn:aws:lambda:us-east-1:000000000000:function:platform-app-dev-telemetryProcessor"
+output_queue_url = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/platform-app-dev-output-queue"
+
+```
+
+### Please not for demo purpose I used https://app.localstack.cloud/getting-started
