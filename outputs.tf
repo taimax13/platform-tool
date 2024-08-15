@@ -7,12 +7,13 @@ output "output_queue_url" {
 }
 
 output "lambda_telemetry_processor_arn" {
-  value = module.lambda_functions[0].lambda_function_arn
+  value = aws_lambda_function.lambda_functions["telemetryProcessor"].arn
 }
 
 output "lambda_acknowledgment_handler_arn" {
-  value = module.lambda_functions[1].lambda_function_arn
+  value = aws_lambda_function.lambda_functions["acknowledgmentHandler"].arn
 }
+
 
 output "db_endpoint" {
   value = module.rds_postgres.db_instance_endpoint

@@ -30,3 +30,14 @@ variable "aws_region" {
   type        = string
   default     = "us-west-2"
 }
+
+variable "lambda_functions" {
+  description = "List of Lambda functions with their configurations"
+  type = list(object({
+    name           = string
+    handler        = string
+    filename       = string
+    source_code_hash = string
+    environment    = map(string)
+  }))
+}

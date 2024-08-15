@@ -3,6 +3,7 @@ module "rds_postgres" {
   source  = "terraform-aws-modules/rds/aws"
   version = "6.5.0"
   identifier         = "telemetrydb"
+  family = "postgres12"
   engine             = "postgres"
   instance_class     = "db.t3.micro"
   allocated_storage  = 20

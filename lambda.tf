@@ -32,8 +32,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "sqs:GetQueueAttributes"
         ],
         Resource = [
-          module.input_queue.sqs_queue_arn,
-          module.output_queue.sqs_queue_arn
+          module.input_queue.queue_arn,
+          module.output_queue.queue_arn
         ]
       },
       {
@@ -54,18 +54,17 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
-# Define the Lambda functions using a for_each loop
-module "lambda_functions" {
-  source  = "terraform-aws-modules/lambda/aws"
-  version = "4.8.0"
-
+resource "aws_lambda_function" "lambda_functions" {
   for_each        = { for lambda in var.lambda_functions : lambda.name => lambda }
-  function_name   = each.value.name
+
+  function_name   = "${var.project_name}-${var.environment}-${each.value.name}"
   handler         = each.value.handler
   runtime         = "python3.8"
   role            = aws_iam_role.lambda_exec_role.arn
   filename        = each.value.filename
-  source_code_hash = each.value.source_code_hash
+  source_code_hash = filebase64sha256(each.value.source_code_hash)
 
-  environment_variables = each.value.environment
+  environment {
+    variables = each.value.environment
+  }
 }
