@@ -4,7 +4,7 @@ import os
 import pytest
 from moto import mock_sqs, mock_rds
 
-import tes
+from lambdas.telementary_processor_sqs_postgress_psg import lambda_handler
 
 
 @mock_sqs

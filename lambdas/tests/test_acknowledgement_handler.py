@@ -4,7 +4,7 @@ import os
 import pytest
 from moto import mock_sqs
 
-
+from lambdas.acknoledgement import lambda_handler
 
 @mock_sqs
 def test_acknowledgment_handler():

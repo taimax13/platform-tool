@@ -1,38 +1,3 @@
-resource "aws_lambda_function" "telemetry_processor_lambda" {
-  function_name = "${var.project_name}-${var.environment}-telemetryProcessor"
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
-  role          = aws_iam_role.lambda_exec_role.arn
-  source_code_hash = filebase64sha256("./lmbda/telemetry_processor.zip")
-  filename      = "./lmbda/telemetry_processor.zip"
-
-  environment {
-    variables = {
-      INPUT_QUEUE_URL  = module.input_queue.queue_url
-      OUTPUT_QUEUE_URL = module.output_queue.queue_url
-      DB_HOST          = module.rds_postgres.db_instance_endpoint
-      DB_NAME          = var.db_name
-      DB_USER          = var.db_username
-      DB_PASSWORD      = var.db_password
-    }
-  }
-}
-
-resource "aws_lambda_function" "acknowledgment_handler_lambda" {
-  function_name = "${var.project_name}-${var.environment}-acknowledgmentHandler"
-  handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
-  role          = aws_iam_role.lambda_exec_role.arn
-  source_code_hash = filebase64sha256("./lambda/acknowledgment_handler.zip")
-  filename      = "./lambda/acknowledgment_handler.zip"
-
-  environment {
-    variables = {
-      OUTPUT_QUEUE_URL = module.output_queue.queue_url
-    }
-  }
-}
-
 resource "aws_iam_role" "lambda_exec_role" {
   name = "${var.project_name}-${var.environment}-lambda-exec-role"
 
@@ -50,6 +15,7 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+# Define the IAM policy (same as before)
 resource "aws_iam_policy" "lambda_policy" {
   name        = "${var.project_name}-${var.environment}-lambda-policy"
   description = "IAM policy for Lambda to access SQS and RDS"
@@ -66,8 +32,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "sqs:GetQueueAttributes"
         ],
         Resource = [
-          module.input_queue.queue_arn,
-          module.output_queue.queue_arn
+          module.input_queue.sqs_queue_arn,
+          module.output_queue.sqs_queue_arn
         ]
       },
       {
@@ -82,7 +48,24 @@ resource "aws_iam_policy" "lambda_policy" {
   })
 }
 
+# Attach the policy to the role (same as before)
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = aws_iam_policy.lambda_policy.arn
+}
+
+# Define the Lambda functions using a for_each loop
+module "lambda_functions" {
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "4.8.0"
+
+  for_each        = { for lambda in var.lambda_functions : lambda.name => lambda }
+  function_name   = each.value.name
+  handler         = each.value.handler
+  runtime         = "python3.8"
+  role            = aws_iam_role.lambda_exec_role.arn
+  filename        = each.value.filename
+  source_code_hash = each.value.source_code_hash
+
+  environment_variables = each.value.environment
 }
