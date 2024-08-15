@@ -75,3 +75,43 @@ output_queue_url = "http://sqs.us-east-1.localhost.localstack.cloud:4566/0000000
 ```
 
 ### Please not for demo purpose I used https://app.localstack.cloud/getting-started
+
+
+
+Lambda tests 
+```
+
+Testing started at 13:44 ...
+Connected to pydev debugger (build 242.20224.347)
+Launching pytest with arguments test_acknowledgement_handler.py::test_acknowledgment_handler --no-header --no-summary -q in /home/talexm/platform-tool/platform-tool/lambdas/tests
+
+============================= test session starts ==============================
+collecting ... collected 1 item
+
+test_acknowledgement_handler.py::test_acknowledgment_handler PASSED      [100%]Telemetry data with ID 12345 processed successfully.
+
+
+============================== 1 passed in 2.69s ===============================
+
+Process finished with exit code 0
+
+```
+
+###please note i need to fix assertion !
+```
+Testing started at 14:06 ...
+Connected to pydev debugger (build 242.20224.347)
+Launching pytest with arguments test_telementary_processor.py::test_telemetry_processor --no-header --no-summary -q in /home/talexm/platform-tool/platform-tool/lambdas/tests
+
+============================= test session starts ==============================
+collecting ... collected 1 item
+
+test_telementary_processor.py::test_telemetry_processor PASSED           [100%]Expected query: INSERT INTO telemetry (id, data, received_at) VALUES (%s, %s, NOW())
+Actual query: INSERT INTO telemetry (id, data, received_at) VALUES (%s, %s, NOW())
+
+
+============================== 1 passed in 0.65s ===============================
+
+Process finished with exit code 0
+
+```

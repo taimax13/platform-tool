@@ -9,8 +9,6 @@ def lambda_handler(event, context):
     try:
         for record in event['Records']:
             message_body = json.loads(record['body'])
-
-            # Example logic to handle the acknowledgment
             if message_body['status'] == 'processed':
                 print(f"Telemetry data with ID {message_body['id']} processed successfully.")
             else:
