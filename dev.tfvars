@@ -1,0 +1,6 @@
+project_name = "platform-app"
+environment  = "dev"
+db_username = "admin"
+db_password = "password"
+db_name     = "telemetrydb"
+aws_region = "us-west-2"
