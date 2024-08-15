@@ -3,14 +3,14 @@ resource "aws_lambda_function" "telemetry_processor_lambda" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_exec_role.arn
-  source_code_hash = filebase64sha256("path_to_your_lambda_zip/telemetry_processor.zip")
-  filename      = "path_to_your_lambda_zip/telemetry_processor.zip"
+  source_code_hash = filebase64sha256("./lmbda/telemetry_processor.zip")
+  filename      = "./lmbda/telemetry_processor.zip"
 
   environment {
     variables = {
       INPUT_QUEUE_URL  = module.input_queue.queue_url
       OUTPUT_QUEUE_URL = module.output_queue.queue_url
-      DB_HOST          = aws_rds_instance.db_instance.endpoint
+      DB_HOST          = module.rds_postgres.db_instance_endpoint
       DB_NAME          = var.db_name
       DB_USER          = var.db_username
       DB_PASSWORD      = var.db_password
@@ -23,8 +23,8 @@ resource "aws_lambda_function" "acknowledgment_handler_lambda" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_exec_role.arn
-  source_code_hash = filebase64sha256("path_to_your_lambda_zip/acknowledgment_handler.zip")
-  filename      = "path_to_your_lambda_zip/acknowledgment_handler.zip"
+  source_code_hash = filebase64sha256("./lambda/acknowledgment_handler.zip")
+  filename      = "./lambda/acknowledgment_handler.zip"
 
   environment {
     variables = {
@@ -66,8 +66,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "sqs:GetQueueAttributes"
         ],
         Resource = [
-          module.input_queue.sqs_queue_arn,
-          module.output_queue.sqs_queue_arn
+          module.input_queue.queue_arn,
+          module.output_queue.queue_arn
         ]
       },
       {
