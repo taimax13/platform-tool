@@ -22,15 +22,15 @@ jobs:
 
     - name: Build Lambda zip for Telemetry Processor
       run: |
-        cd lambda/telemetry_processor
-        zip -r ../../telemetry_processor.zip .
-      working-directory: ./lambda/telemetry_processor
+        cd lambda
+        zip -r telemetry_processor.zip telementary_processor_sqs_postgress_psg.py
+      working-directory: ./lambda
 
     - name: Build Lambda zip for Acknowledgment Handler
       run: |
-        cd lambda/acknowledgment_handler
-        zip -r ../../acknowledgment_handler.zip .
-      working-directory: ./lambda/acknowledgment_handler
+        cd lambda
+        zip -r acknowledgment_handler.zip acknoledgement.py
+      working-directory: ./lambda
 
     - name: Run tests
       run: pytest
