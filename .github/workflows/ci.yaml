@@ -8,10 +8,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.8'
 
@@ -22,15 +22,15 @@ jobs:
 
     - name: Build Lambda zip for Telemetry Processor
       run: |
-        cd lambda
+        cd lambdas
         zip -r telemetry_processor.zip telementary_processor_sqs_postgress_psg.py
-      working-directory: ./lambda
+      working-directory: ./lambdas
 
     - name: Build Lambda zip for Acknowledgment Handler
       run: |
-        cd lambda
+        cd lambdas
         zip -r acknowledgment_handler.zip acknoledgement.py
-      working-directory: ./lambda
+      working-directory: ./lambdas
 
     - name: Run tests
       run: pytest
