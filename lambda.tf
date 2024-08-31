@@ -67,4 +67,21 @@ resource "aws_lambda_function" "lambda_functions" {
   environment {
     variables = each.value.environment
   }
+
+  vpc_config {
+    subnet_ids         = module.vpc.private_subnets
+    security_group_ids = [aws_security_group.lambda_security_group.id]
+  }
+}
+
+resource "aws_security_group" "lambda_security_group" {
+  name_prefix = "${var.project_name}-${var.environment}-lambda-sg"
+  vpc_id      = module.vpc.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }

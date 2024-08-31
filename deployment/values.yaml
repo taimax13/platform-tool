@@ -1,0 +1,20 @@
+replicas: 3
+
+image:
+  repository: nginxdemos/hello
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 3000 # exposed for other pods
+  targetPort: 8080 #container port
+
+labels:
+  environment:
+
+
+#### if needed outside exposure
+ingress:
+  enabled: false #careful! no node group and no sg included to do it
+  hostname: domain.com
+  tlsSecretName: my-tls-secret

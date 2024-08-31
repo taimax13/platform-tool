@@ -41,3 +41,9 @@ variable "lambda_functions" {
     environment    = map(string)
   }))
 }
+
+variable "instance_types" {
+  description = "List of instance types for the EKS node group"
+  type = list(string)
+  default = ["m6i.large", "m6a.large", "m7g.large"]
+}
