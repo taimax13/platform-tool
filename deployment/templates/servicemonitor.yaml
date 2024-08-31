@@ -9,7 +9,7 @@ spec:
     matchLabels:
       app: {{ include "hello-world.name" . }}
   endpoints:
-  - port: http
+  - port: 3000
     interval: 30s
     path: /metrics
   namespaceSelector:
