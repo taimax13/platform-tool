@@ -18,3 +18,14 @@ ingress:
   enabled: false #careful! no node group and no sg included to do it
   hostname: domain.com
   tlsSecretName: my-tls-secret
+
+
+cloudwatch:
+  enabled: true
+  logGroupName: "/aws/api-gateway/example"
+  retentionInDays: 14
+
+grafana:
+  enabled: true
+  dashboardName: "lambda-monitoring-dashboard"
+  lambdaFunctionName: "your_lambda_function_name"

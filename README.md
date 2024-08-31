@@ -1,117 +1,116 @@
-# platform-tool
-this is demo example of tool, developed for platform -  AWS Lambda functions, SQS, and either RDS Postgres or DocumentDB. 
+# Hello World Application with Monitoring and Logging
 
-# Platform Application on AWS with Lambda, SQS, and RDS/Postgres
+This repository contains a Helm chart for deploying a "Hello World" application on a Kubernetes cluster, along with integrated monitoring and logging features using AWS CloudWatch and Grafana.
 
-## Overview
+## Table of Contents
 
-This platform application handles incoming telemetry data, processes it, and provides asynchronous responses using AWS Lambda, SQS, and RDS Postgres (or DocumentDB). The architecture is designed to be modular, scalable, and reliable, emphasizing separation of concerns and robust error handling.
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Deploying the Helm Chart](#deploying-the-helm-chart)
+- [Monitoring and Logging](#monitoring-and-logging)
+- [Accessing Grafana Dashboard](#accessing-grafana-dashboard)
+- [Uninstalling](#uninstalling)
 
-## Architecture
+## Prerequisites
 
-### Key Components:
-- **Telemetry Processor Lambda**: 
-  - Receives telemetry data from the input SQS queue.
-  - Processes and stores the data in the database (RDS Postgres or DocumentDB).
-  - Sends acknowledgment messages to the output SQS queue.
+Before you begin, ensure you have the following:
 
-- **Acknowledgment Handler Lambda**: 
-  - Handles acknowledgment messages from the Telemetry Processor Lambda.
-  - Logs processing outcomes and manages errors.
+- A Kubernetes cluster (e.g., Amazon EKS)
+- Helm installed on your local machine
+- AWS CLI configured with appropriate permissions
+- Access to AWS CloudWatch and Grafana
 
-- **SQS Queues**: 
-  - **Input Queue**: Receives telemetry data and triggers the Telemetry Processor Lambda.
-  - **Output Queue**: Collects acknowledgment messages from the Telemetry Processor Lambda.
+## Installation
 
-- **RDS Postgres (or DocumentDB)**: 
-  - Stores processed telemetry data.
+### 1. Clone the Repository
 
-## Resources
+Clone this repository to your local machine:
 
-### Telemetry Processor Lambda
-- **Purpose**: Processes telemetry data and manages storage and acknowledgment.
-- **Environment Variables**:
-  - `INPUT_QUEUE_URL`, `OUTPUT_QUEUE_URL`
-  - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-
-### Acknowledgment Handler Lambda
-- **Purpose**: Processes and logs acknowledgment messages.
-- **Environment Variables**:
-  - `OUTPUT_QUEUE_URL`
-
-### SQS Queues
-- **Input Queue**: Triggers the Telemetry Processor Lambda with incoming data.
-- **Output Queue**: Collects and manages acknowledgment messages.
-
-### RDS Postgres (or DocumentDB)
-- **Purpose**: Securely stores the telemetry data processed by the Telemetry Processor Lambda.
-
-## Setup and Deployment
-
-### Prerequisites
-- Terraform installed and configured.
-- AWS CLI configured with appropriate access.
-
-### Steps to Deploy:
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-username/platform-application.git
-   cd platform-application
-### Plan and apply terraform 
+```code
+  git clone https://github.com/your-repo/hello-world-chart.git
+  cd deployment
 ```
- terraform plan -var-file="dev.tfvars"
- terraform apply -var-file="dev.tfvars"
+### 2. Add the NGINX Ingress Controller (if needed)
+ NGINX Ingress Controller, to install if needed:
+```code
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
 
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --set controller.publishService.enabled=true \
+  --set controller.service.type=LoadBalancer
 ```
+## Configuration
+values.yaml
+The values.yaml file contains default values for the Helm chart. Can be customize these settings to match your environment:
 
-the output 
+
+```yaml
+
+replicas: 3
+
+image:
+  repository: nginxdemos/hello
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  hostname: domain.com
+  tlsSecretName: my-tls-secret
+
+cloudwatch:
+  enabled: true
+  logGroupName: "/aws/api-gateway/example"
+  retentionInDays: 14
+
+grafana:
+  enabled: true
+  dashboardName: "lambda-monitoring-dashboard"
+  lambdaFunctionName: "your_lambda_function_name"
 ```
-db_endpoint = "localhost.localstack.cloud:4510"
-input_queue_url = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/platform-app-dev-input-queue"
-lambda_acknowledgment_handler_arn = "arn:aws:lambda:us-east-1:000000000000:function:platform-app-dev-acknowledgmentHandler"
-lambda_telemetry_processor_arn = "arn:aws:lambda:us-east-1:000000000000:function:platform-app-dev-telemetryProcessor"
-output_queue_url = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/platform-app-dev-output-queue"
+Environment-Specific Settings
+Can be override by any value in values.yaml during deployment by using the --set flag or providing a custom values file.
 
+Deploying the Helm Chart
+To deploy the Helm chart, run the following command:
+
+```bash
+
+helm install hello-world ./hello-world
 ```
+This command will deploy the application, configure CloudWatch logging, and set up the Grafana dashboard if enabled.
 
-### Please not for demo purpose I used https://app.localstack.cloud/getting-started
+### Monitoring and Logging
+CloudWatch Logging
+CloudWatch logging is enabled for API Gateway by default. Logs are directed to the specified log group in the values.yaml file.
 
+Grafana Dashboard
+If enabled, the Helm chart will create a ConfigMap that contains a pre-configured Grafana dashboard to monitor Lambda function metrics such as:
 
+Invocation Count
+Error Count
+Average Duration
+Accessing Grafana Dashboard
+If you have Grafana installed, Can be import the dashboard from the ConfigMap created by this Helm chart:
 
-Lambda tests 
+Port-forward the Grafana service to your local machine:
+
+bash
 ```
-
-Testing started at 13:44 ...
-Connected to pydev debugger (build 242.20224.347)
-Launching pytest with arguments test_acknowledgement_handler.py::test_acknowledgment_handler --no-header --no-summary -q in /home/talexm/platform-tool/platform-tool/lambdas/tests
-
-============================= test session starts ==============================
-collecting ... collected 1 item
-
-test_acknowledgement_handler.py::test_acknowledgment_handler PASSED      [100%]Telemetry data with ID 12345 processed successfully.
-
-
-============================== 1 passed in 2.69s ===============================
-
-Process finished with exit code 0
-
+kubectl port-forward service/grafana 3000:80
 ```
+Open your browser and navigate to http://localhost:3000.
 
-###please note i need to fix assertion !
-```
-Testing started at 14:06 ...
-Connected to pydev debugger (build 242.20224.347)
-Launching pytest with arguments test_telementary_processor.py::test_telemetry_processor --no-header --no-summary -q in /home/talexm/platform-tool/platform-tool/lambdas/tests
+Log in with your Grafana credentials.
 
-============================= test session starts ==============================
-collecting ... collected 1 item
-
-test_telementary_processor.py::test_telemetry_processor PASSED           [100%]Expected query: INSERT INTO telemetry (id, data, received_at) VALUES (%s, %s, NOW())
-Actual query: INSERT INTO telemetry (id, data, received_at) VALUES (%s, %s, NOW())
+Import the dashboard by using the JSON provided in the ConfigMap.
 
 
-============================== 1 passed in 0.65s ===============================
 
-Process finished with exit code 0
 
-```
