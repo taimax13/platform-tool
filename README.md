@@ -111,6 +111,13 @@ Log in with your Grafana credentials.
 
 Import the dashboard by using the JSON provided in the ConfigMap.
 
+## Architecture Diagram
 
+The architecture of the deployment is shown below:
+
+![Architecture Diagram](diagram/diagram.png)
+
+
+Thank you!
 
 
