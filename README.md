@@ -119,6 +119,8 @@ Import the dashboard by using the JSON provided in the ConfigMap.
 
 ## Architecture Diagram
 
+### API-Getaway , Lambda, DynamoDB
+
 ```mermaid
 graph TD
     A[Client] -->|HTTP Request| B[API Gateway]
@@ -144,7 +146,71 @@ graph TD
     style C fill:#bfb,stroke:#333,stroke-width:2px
     style D fill:#fbb,stroke:#333,stroke-width:2px
 ```    
+
+### Networking
+I've created a diagram that illustrates the networking configuration for your serverless web application. Here's an explanation of the components and their relationships:
+VPC (Virtual Private Cloud):
+
+Contains both public and private subnets
+Provides network isolation for your resources
+
+Public Subnet:
+Contains the Internet Gateway and NAT Gateway
+Allows resources to have direct internet access
+
+
+Private Subnet:
+Contains the Lambda functions
+Provides additional security by not exposing resources directly to the internet
+
+Internet Gateway (IG):
+Allows communication between the VPC and the internet
+Enables inbound and outbound internet access for the public subnet
+
+NAT Gateway:
+Located in the public subnet
+Allows resources in the private subnet to access the internet while remaining private
+
+Lambda Functions:
+Deployed in the private subnet
+Can access the internet through the NAT Gateway
+Can also access other AWS services like DynamoDB
+
+DynamoDB:
+Shown within the VPC for illustration, but it's actually a fully managed AWS service
+Lambda functions can access DynamoDB through VPC endpoints or over the internet
+
+API Gateway:
+Not part of the VPC but shown to illustrate how it invokes the Lambda functions
 The architecture of the deployment is shown below:
+
+```mermade
+graph TB
+    subgraph "VPC"
+        subgraph "Public Subnet"
+            IG[Internet Gateway]
+            NATGW[NAT Gateway]
+        end
+        subgraph "Private Subnet"
+            Lambda[Lambda Functions]
+            DDB[(DynamoDB)]
+        end
+    end
+    
+    Internet((Internet)) <-->|Public Traffic| IG
+    IG <--> NATGW
+    NATGW <-->|Private Traffic| Lambda
+    Lambda <--> DDB
+    
+    API[API Gateway] -->|Invokes| Lambda
+    
+    style Internet fill:#f9f,stroke:#333,stroke-width:2px
+    style IG fill:#85C1E9,stroke:#333,stroke-width:2px
+    style NATGW fill:#85C1E9,stroke:#333,stroke-width:2px
+    style Lambda fill:#82E0AA,stroke:#333,stroke-width:2px
+    style DDB fill:#F8C471,stroke:#333,stroke-width:2px
+    style API fill:#BB8FCE,stroke:#333,stroke-width:2px
+```
 
 ![Architecture Diagram](diagram/diagram.png)
 
