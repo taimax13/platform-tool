@@ -141,10 +141,10 @@ graph TD
     F --> C
     G --> C
     
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#fbb,stroke:#333,stroke-width:2px
+    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
+    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
+    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
+    style D fill:#fbb,stroke:#333,stroke-width:2px,color:#000
 ```    
 
 ### Networking
