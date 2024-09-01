@@ -184,7 +184,7 @@ API Gateway:
 Not part of the VPC but shown to illustrate how it invokes the Lambda functions
 The architecture of the deployment is shown below:
 
-```mermade
+```mermaid
 graph TB
     subgraph "VPC"
         subgraph "Public Subnet"
