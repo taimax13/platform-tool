@@ -248,12 +248,12 @@ graph TB
     
     API[API Gateway] -->|Invokes| Lambda
     
-    style Internet fill:#f9f,stroke:#333,stroke-width:2px
-    style IG fill:#85C1E9,stroke:#333,stroke-width:2px
-    style NATGW fill:#85C1E9,stroke:#333,stroke-width:2px
-    style Lambda fill:#82E0AA,stroke:#333,stroke-width:2px
-    style DDB fill:#F8C471,stroke:#333,stroke-width:2px
-    style API fill:#BB8FCE,stroke:#333,stroke-width:2px
+    style Internet fill:#f9f,stroke:#333,stroke-width:2px,color:#000
+    style IG fill:#85C1E9,stroke:#333,stroke-width:2px,color:#000
+    style NATGW fill:#85C1E9,stroke:#333,stroke-width:2px,color:#000
+    style Lambda fill:#82E0AA,stroke:#333,stroke-width:2px,color:#000
+    style DDB fill:#F8C471,stroke:#333,stroke-width:2px,color:#000
+    style API fill:#BB8FCE,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ### Multy-tenancy
@@ -317,14 +317,14 @@ graph TD
     end
     D --> H
     
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#fbb,stroke:#333,stroke-width:2px
-    style E fill:#fbf,stroke:#333,stroke-width:2px
-    style F fill:#ccf,stroke:#333,stroke-width:2px
-    style G fill:#cff,stroke:#333,stroke-width:2px
-    style H fill:#fcb,stroke:#333,stroke-width:2px
+    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
+    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
+    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
+    style D fill:#fbb,stroke:#333,stroke-width:2px,color:#000
+    style E fill:#fbf,stroke:#333,stroke-width:2px,color:#000
+    style F fill:#ccf,stroke:#333,stroke-width:2px,color:#000
+    style G fill:#cff,stroke:#333,stroke-width:2px,color:#000
+    style H fill:#fcb,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ### Architecture   EKS
