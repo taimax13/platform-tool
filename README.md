@@ -17,7 +17,7 @@ This repository contains a Helm chart for deploying a "Hello World" application 
 Before you begin, ensure you have the following:
 
 - Ready AWS account
-- Helm installed on your local machine
+- Helm installed on  local machine
 - AWS CLI configured with appropriate permissions
 - Access to AWS CloudWatch and Grafana
 - Terraform 
@@ -26,7 +26,7 @@ Before you begin, ensure you have the following:
 
 ### 1. Clone the Repository
 
-Clone this repository to your local machine:
+Clone this repository to  local machine:
 
 ```code
   git clone https://github.com/taimax13/platform-tool/tree/t/assignement
@@ -44,7 +44,7 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
 ```
 ## Configuration
 values.yaml
-The values.yaml file contains default values for the Helm chart. Can be customize these settings to match your environment:
+The values.yaml file contains default values for the Helm chart. Can be customize these settings to match  environment:
 
 
 ```yaml
@@ -73,7 +73,7 @@ cloudwatch:
 grafana:
   enabled: true
   dashboardName: "lambda-monitoring-dashboard"
-  lambdaFunctionName: "your_lambda_function_name"
+  lambdaFunctionName: "_lambda_function_name"
 ```
 Environment-Specific Settings
 Can be override by any value in values.yaml during deployment by using the --set flag or providing a custom values file.
@@ -100,22 +100,22 @@ Average Duration
 Accessing Grafana Dashboard
 If you have Grafana installed, Can be import the dashboard from the ConfigMap created by this Helm chart:
 
-Port-forward the Grafana service to your local machine:
+Port-forward the Grafana service to  local machine:
 
 bash
 ```
 kubectl port-forward service/grafana 3000:80
 ```
-Open your browser and navigate to http://localhost:3000.
+Open  browser and navigate to http://localhost:3000.
 
-Log in with your Grafana credentials.
+Log in with  Grafana credentials.
 
 Import the dashboard by using the JSON provided in the ConfigMap.
 
 ## Architecture Diagram
 
 ### Lambdas
-# Your Project Title
+#  Project Title
 
 ## Architecture Diagram
 
@@ -148,11 +148,11 @@ graph TD
 ```    
 
 ### Networking
-I've created a diagram that illustrates the networking configuration for your serverless web application. Here's an explanation of the components and their relationships:
+I've created a diagram that illustrates the networking configuration for  serverless web application. Here's an explanation of the components and their relationships:
 VPC (Virtual Private Cloud):
 
 Contains both public and private subnets
-Provides network isolation for your resources
+Provides network isolation for  resources
 
 Public Subnet:
 Contains the Internet Gateway and NAT Gateway
@@ -182,7 +182,51 @@ Lambda functions can access DynamoDB through VPC endpoints or over the internet
 
 API Gateway:
 Not part of the VPC but shown to illustrate how it invokes the Lambda functions
-The architecture of the deployment is shown below:
+
+# VOCAL POINT: 
+Lambda Function VPC Association:
+
+By default, Lambda functions run in an AWS-managed VPC with internet access.
+When you associate a Lambda function with  VPC, it loses direct internet access for added security.
+The function now uses the VPC's networking, including its route tables and subnets.
+
+
+Placement in Private Subnet:
+Placing the Lambda function in a private subnet of  VPC.
+Private subnets don't have a route to the internet gateway, preventing direct internet access.
+
+NAT Gateway in Public Subnet:
+A NAT (Network Address Translation) Gateway is deployed in a public subnet of  VPC.
+The public subnet has a route to the internet gateway, allowing internet access.
+
+
+Route Table Configuration:
+
+The private subnet's route table is configured with a route that sends internet-bound traffic (0.0.0.0/0) to the NAT Gateway.
+
+
+Outbound Internet Access Process:
+
+When the Lambda function needs to make an internet request:
+a. It sends the request to the NAT Gateway (as per the route table).
+b. The NAT Gateway translates the private IP of the Lambda function to its own public IP.
+c. The request is then sent out to the internet through the Internet Gateway.
+d. When the response comes back, the NAT Gateway translates it back and forwards it to the Lambda function.
+
+Security Group Configuration:
+The Lambda function's security group should allow outbound traffic.
+The NAT Gateway doesn't require specific security group rules for outbound traffic.
+
+
+This setup achieves several things:
+
+It allows Lambda functions to access internet resources (e.g., external APIs, package repositories).
+It keeps the Lambda functions secure in a private subnet, not directly exposed to the internet.
+It centralizes outbound internet access through the NAT Gateway, making it easier to monitor and control.
+
+It's worth noting that this configuration adds some complexity and potential cost (NAT Gateway charges), so it's typically used when you need both VPC access for  Lambda functions and outbound internet access. If you don't need VPC resources, Lambda functions can be left outside the VPC for simpler internet access.
+
+### The architecture of the deployment is shown below:
 
 ```mermaid
 graph TB
@@ -212,6 +256,78 @@ graph TB
     style API fill:#BB8FCE,stroke:#333,stroke-width:2px
 ```
 
+### Multy-tenancy
+
+Client Authentication and Authorization:
+
+The client authenticates using AWS Cognito, which provides user management and authentication services.
+Cognito issues JWT tokens that include claims about the user, including their tenant ID.
+
+API Gateway and Lambda:
+The authenticated client sends requests to API Gateway.
+API Gateway invokes a Lambda function, passing along the authentication token.
+
+Lambda Function:
+The Lambda function is placed in a private subnet within a VPC for security.
+It assumes an IAM role that grants it necessary permissions.
+The function verifies the Cognito token and extracts the tenant ID.
+It retrieves RDS credentials from AWS Secrets Manager.
+
+Amazon RDS PostgreSQL:
+The RDS instance is also placed in a private subnet within the VPC.
+It's configured with row-level security (RLS) policies.
+
+Secure Access to RDS:
+The Lambda function connects to RDS using credentials from Secrets Manager.
+Network access is controlled via security groups within the VPC.
+
+Row-Level Security in PostgreSQL:
+RLS policies are set up in PostgreSQL to filter rows based on the tenant ID.
+When the Lambda function connects to the database, it sets the current tenant context (e.g., SET app.current_tenant = 'tenant_id';).
+RLS policies use this context to filter query results, ensuring each tenant only sees their own data.
+
+
+Query Execution:
+The Lambda function constructs and executes queries against RDS.
+PostgreSQL's RLS automatically applies tenant-specific filters to all queries.
+
+
+Data Isolation:
+Even if a query doesn't explicitly filter by tenant, the RLS ensures that only data belonging to the current tenant is returned.
+
+```mermaid
+graph TD
+    A[Client] -->|Authenticated Request| B[API Gateway]
+    B -->|Invoke| C[Lambda Function]
+    C -->|Query with Tenant Context| D[(Amazon RDS PostgreSQL)]
+    E[AWS Cognito] -->|Authenticate & Authorize| C
+    
+    subgraph VPC
+        subgraph "Private Subnet"
+            C
+            D
+        end
+    end
+    
+    F[IAM Role] -->|Assume| C
+    G[Secrets Manager] -->|RDS Credentials| C
+    
+    subgraph "PostgreSQL"
+        H[Row-Level Security]
+    end
+    D --> H
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#fbb,stroke:#333,stroke-width:2px
+    style E fill:#fbf,stroke:#333,stroke-width:2px
+    style F fill:#ccf,stroke:#333,stroke-width:2px
+    style G fill:#cff,stroke:#333,stroke-width:2px
+    style H fill:#fcb,stroke:#333,stroke-width:2px
+```
+
+### Architecture  
 ![Architecture Diagram](diagram/diagram.png)
 
 
