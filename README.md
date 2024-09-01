@@ -462,21 +462,22 @@ graph TD
     
     O[kubectl] -.->|Manages| C
     
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#ddd,stroke:#333,stroke-width:2px
-    style E fill:#ddd,stroke:#333,stroke-width:2px
-    style F fill:#ddd,stroke:#333,stroke-width:2px
-    style G fill:#fbb,stroke:#333,stroke-width:2px
-    style H fill:#fbf,stroke:#333,stroke-width:2px
-    style I fill:#bff,stroke:#333,stroke-width:2px
-    style J fill:#ff9,stroke:#333,stroke-width:2px
-    style K fill:#9ff,stroke:#333,stroke-width:2px
-    style L fill:#fdb,stroke:#333,stroke-width:2px
-    style M fill:#fdb,stroke:#333,stroke-width:2px
-    style N fill:#fdb,stroke:#333,stroke-width:2px
-    style O fill:#cff,stroke:#333,stroke-width:2px
+    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
+    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
+    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
+    style D fill:#ddd,stroke:#333,stroke-width:2px,color:#000
+    style E fill:#ddd,stroke:#333,stroke-width:2px,color:#000
+    style F fill:#ddd,stroke:#333,stroke-width:2px,color:#000
+    style G fill:#fbb,stroke:#333,stroke-width:2px,color:#000
+    style H fill:#fbf,stroke:#333,stroke-width:2px,color:#000
+    style I fill:#bff,stroke:#333,stroke-width:2px,color:#000
+    style J fill:#ff9,stroke:#333,stroke-width:2px,color:#000
+    style K fill:#9ff,stroke:#333,stroke-width:2px,color:#000
+    style L fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+    style M fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+    style N fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+    style O fill:#cff,stroke:#333,stroke-width:2px,color:#000
+
 ```
 
 
