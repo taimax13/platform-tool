@@ -114,6 +114,36 @@ Import the dashboard by using the JSON provided in the ConfigMap.
 
 ## Architecture Diagram
 
+### Lambdas
+# Your Project Title
+
+## Architecture Diagram
+
+```mermaid
+graph TD
+    A[Client] -->|HTTP Request| B[API Gateway]
+    B -->|Trigger| C[AWS Lambda]
+    C -->|CRUD Operations| D[DynamoDB]
+    
+    subgraph "API Endpoints"
+    E[Create Item]
+    F[Get Item]
+    G[Delete Item]
+    end
+    
+    B --> E
+    B --> F
+    B --> G
+    
+    E --> C
+    F --> C
+    G --> C
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#fbb,stroke:#333,stroke-width:2px
+```    
 The architecture of the deployment is shown below:
 
 ![Architecture Diagram](diagram/diagram.png)
