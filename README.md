@@ -502,6 +502,94 @@ graph TD
 
 ```
 
+## Security Components Subgraph:
+
+IAM Roles: Connected to the worker nodes to signify secure access management.
+Network Policies: Connected to the Kubernetes objects to enforce traffic control.
+Secrets Management: Connected to the Pods, indicating secure handling of sensitive information.
+Visual Enhancements:
+
+Each security component has been given a distinct color to differentiate it from the other elements and highlight its importance.
+
+### Monitoring and logging
+
+Monitoring and Logging Setup for Lambda Functions and API Gateway
+
+Overview: This document describes the setup for monitoring AWS Lambda functions and enabling detailed logging for API Gateway requests and responses. The setup includes the use of CloudWatch for monitoring and logging, and Grafana for visualizing key metrics.
+
+1. Monitoring Lambda Functions:
+
+CloudWatch Log Groups:
+
+Each Lambda function is automatically assigned a CloudWatch log group where logs are stored.
+Navigate to the CloudWatch Console > Log groups to view logs.
+CloudWatch Alarms:
+
+Alarms have been set up to monitor the following metrics:
+Invocations: Tracks the number of times the Lambda function is invoked.
+Errors: Monitors the count of errors.
+Duration: Tracks the execution time of the Lambda function.
+Accessing Logs and Metrics:
+
+Logs can be accessed through the CloudWatch Console by selecting the relevant log group.
+Metrics and alarms can be viewed and managed in the CloudWatch "Metrics" and "Alarms" sections.
+2. Grafana Dashboard:
+
+Data Source:
+A CloudWatch data source has been configured in Grafana to pull metrics directly from AWS.
+Dashboard Panels:
+The Grafana dashboard includes panels for the following metrics:
+Invocation Count
+Error Count
+Average Duration
+Accessing the Dashboard:
+The Grafana dashboard can be accessed via the Grafana console under the "Dashboards" section.
+3. Detailed Logging for API Gateway:
+
+API Gateway Logging:
+
+Detailed logging for API Gateway requests and responses is enabled and logs are sent to a specific CloudWatch log group.
+The logging level is set to INFO to capture essential details without overwhelming log storage.
+Accessing API Logs:
+
+Logs can be accessed through the CloudWatch Console > Log groups > [ API Gateway log group].
+Conclusion: The monitoring setup ensures that key metrics and logs are easily accessible, providing visibility into the performance and behavior of  AWS Lambda functions and API Gateway. The Grafana dashboard offers a visual representation of the critical metrics, allowing for proactive monitoring and quick troubleshooting.
+
+```mermaid
+graph TD
+    subgraph "AWS Cloud Environment"
+        A[Lambda Function] -->|Sends Logs| B[CloudWatch Log Group]
+        B -->|Monitors| C[CloudWatch Alarms]
+        A -->|Sends Metrics| D[CloudWatch Metrics]
+        subgraph "API Gateway"
+            E[API Requests] -->|Logs Requests/Responses| F[API Gateway Logs]
+            F -->|Stores Logs| B
+        end
+    end
+    
+    subgraph "Grafana Dashboard"
+        G[CloudWatch Data Source] -->|Pulls Metrics| H[Invocation Count Panel]
+        G -->|Pulls Metrics| I[Error Count Panel]
+        G -->|Pulls Metrics| J[Average Duration Panel]
+        G -->|Pulls Logs| K[API Gateway Logs Panel]
+    end
+    
+    B -.->|Stores Logs| G
+    D -.->|Provides Metrics| G
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
+    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
+    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
+    style D fill:#ddd,stroke:#333,stroke-width:2px,color:#000
+    style E fill:#fbf,stroke:#333,stroke-width:2px,color:#000
+    style F fill:#fbb,stroke:#333,stroke-width:2px,color:#000
+    style G fill:#9ff,stroke:#333,stroke-width:2px,color:#000
+    style H fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+    style I fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+    style J fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+    style K fill:#fdb,stroke:#333,stroke-width:2px,color:#000
+
+```
 
 Thank you!
 
