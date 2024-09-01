@@ -16,10 +16,11 @@ This repository contains a Helm chart for deploying a "Hello World" application 
 
 Before you begin, ensure you have the following:
 
-- A Kubernetes cluster (e.g., Amazon EKS)
+- Ready AWS account
 - Helm installed on your local machine
 - AWS CLI configured with appropriate permissions
 - Access to AWS CloudWatch and Grafana
+- Terraform 
 
 ## Installation
 
