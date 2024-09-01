@@ -29,7 +29,7 @@ Before you begin, ensure you have the following:
 Clone this repository to your local machine:
 
 ```code
-  git clone https://github.com/your-repo/hello-world-chart.git
+  git clone https://github.com/taimax13/platform-tool/tree/t/assignement
   cd deployment
 ```
 ### 2. Add the NGINX Ingress Controller (if needed)
