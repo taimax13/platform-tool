@@ -327,8 +327,157 @@ graph TD
     style H fill:#fcb,stroke:#333,stroke-width:2px
 ```
 
-### Architecture  
-![Architecture Diagram](diagram/diagram.png)
+### Architecture   EKS
+
+# Setting Up an EKS Cluster: (there is a terraform module as well , weapon of choice )
+
+The EKS (Elastic Kubernetes Service) cluster is created using AWS services.
+It consists of multiple worker nodes (EC2 instances) that run  containerized applications.
+kubectl is configured to connect to this EKS cluster, allowing you to manage Kubernetes objects.
+
+
+# Deploying a Sample Application:
+
+A Deployment object is used to manage the application pods. This ensures a specified number of pod replicas are running at all times.
+Pods (labeled Pod 1, Pod 2, Pod N in the diagram) run  "Hello World" application containers.
+A Service object exposes these pods, making them accessible within the cluster or externally.
+An Ingress object (not shown in detail) can be used to manage external access to the services.
+
+
+Implementing Monitoring:
+
+Prometheus is deployed within the EKS cluster to collect metrics from  application and cluster.
+Grafana is also deployed in the cluster and configured to use Prometheus as a data source for visualizing the collected metrics.
+
+
+
+# Detailed Steps:
+
+Setting Up EKS and kubectl:
+### Create EKS cluster
+```eksctl create cluster --name my-cluster --region us-west-2```
+
+# Configure kubectl
+```aws eks get-token --cluster-name my-cluster | kubectl apply -f -```
+
+Deploying the Sample Application:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-world
+  template:
+    metadata:
+      labels:
+        app: hello-world
+    spec:
+      containers:
+      - name: hello-world
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-service
+spec:
+  selector:
+    app: hello-world
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+```
+
+# Apply the configuration:
+```kubectl apply -f hello-world-deployment.yaml```
+
+# Implementing Monitoring:
+
+Install Prometheus and Grafana using Helm:
+Add Helm repos
+```bash 
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+# Install Prometheus
+helm install prometheus prometheus-community/prometheus
+
+# Install Grafana
+helm install grafana grafana/grafana
+```
+Configure Grafana to use Prometheus as a data source:
+
+Get Grafana admin password:
+```kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 --decode```
+
+Port-forward Grafana service:
+``````kubectl port-forward service/grafana 3000:80 ``````
+
+Access Grafana UI at http://localhost:3000, add Prometheus as a data source, and create dashboards.
+
+```mermaid
+graph TD
+    A[User] -->|Access| B[Load Balancer]
+    B --> C[EKS Cluster]
+    
+    subgraph "EKS Cluster"
+        D[Worker Node 1]
+        E[Worker Node 2]
+        F[Worker Node N]
+        
+        subgraph "Kubernetes Objects"
+            G[Deployment]
+            H[Service]
+            I[Ingress]
+        end
+        
+        subgraph "Monitoring"
+            J[Prometheus]
+            K[Grafana]
+        end
+    end
+    
+    G -->|Manages| L[Pod 1]
+    G -->|Manages| M[Pod 2]
+    G -->|Manages| N[Pod N]
+    
+    H -->|Exposes| L
+    H -->|Exposes| M
+    H -->|Exposes| N
+    
+    J -->|Scrapes Metrics| L
+    J -->|Scrapes Metrics| M
+    J -->|Scrapes Metrics| N
+    
+    K -->|Queries| J
+    
+    O[kubectl] -.->|Manages| C
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#ddd,stroke:#333,stroke-width:2px
+    style E fill:#ddd,stroke:#333,stroke-width:2px
+    style F fill:#ddd,stroke:#333,stroke-width:2px
+    style G fill:#fbb,stroke:#333,stroke-width:2px
+    style H fill:#fbf,stroke:#333,stroke-width:2px
+    style I fill:#bff,stroke:#333,stroke-width:2px
+    style J fill:#ff9,stroke:#333,stroke-width:2px
+    style K fill:#9ff,stroke:#333,stroke-width:2px
+    style L fill:#fdb,stroke:#333,stroke-width:2px
+    style M fill:#fdb,stroke:#333,stroke-width:2px
+    style N fill:#fdb,stroke:#333,stroke-width:2px
+    style O fill:#cff,stroke:#333,stroke-width:2px
+```
 
 
 Thank you!
