@@ -444,6 +444,12 @@ graph TD
             J[Prometheus]
             K[Grafana]
         end
+        
+        subgraph "Security Components"
+            P[IAM Roles]
+            Q[Network Policies]
+            R[Secrets Management]
+        end
     end
     
     G -->|Manages| L[Pod 1]
@@ -462,6 +468,18 @@ graph TD
     
     O[kubectl] -.->|Manages| C
     
+    P -->|Assigned To| D
+    P -->|Assigned To| E
+    P -->|Assigned To| F
+    
+    Q -->|Controls Traffic| G
+    Q -->|Controls Traffic| H
+    Q -->|Controls Traffic| I
+    
+    R -->|Secures| L
+    R -->|Secures| M
+    R -->|Secures| N
+    
     style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
     style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
     style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
@@ -477,6 +495,10 @@ graph TD
     style M fill:#fdb,stroke:#333,stroke-width:2px,color:#000
     style N fill:#fdb,stroke:#333,stroke-width:2px,color:#000
     style O fill:#cff,stroke:#333,stroke-width:2px,color:#000
+    style P fill:#f99,stroke:#333,stroke-width:2px,color:#000
+    style Q fill:#9f9,stroke:#333,stroke-width:2px,color:#000
+    style R fill:#99f,stroke:#333,stroke-width:2px,color:#000
+
 
 ```
 
