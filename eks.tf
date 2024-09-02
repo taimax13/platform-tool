@@ -2,7 +2,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_name    = "my-cluster"
+  cluster_name    = "${var.project_name}-${var.environment}-my-cluster"
   cluster_version = "1.30"
 
   cluster_endpoint_public_access  = true
@@ -18,22 +18,22 @@ module "eks" {
   subnet_ids               = module.vpc.public_subnets
   control_plane_subnet_ids = module.vpc.private_subnets
 
-  # EKS Managed Node Group(s)
-  eks_managed_node_group_defaults = {
-    instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
-  }
-  create_cloudwatch_log_group = false
-  eks_managed_node_groups = {
-    example = {
-      # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
-      ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["m5.xlarge"]
-
-      min_size     = 2
-      max_size     = 10
-      desired_size = 2
-    }
-  }
+#   # EKS Managed Node Group(s)
+#   eks_managed_node_group_defaults = {
+#     instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
+#   }
+#   create_cloudwatch_log_group = false
+#   eks_managed_node_groups = {
+#     example = {
+#       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
+#       ami_type       = "AL2023_x86_64_STANDARD"
+#       instance_types = ["m5.xlarge"]
+#
+#       min_size     = 2
+#       max_size     = 10
+#       desired_size = 2
+#     }
+#   }
 
   # Cluster access entry
   # To add the current caller identity as an administrator

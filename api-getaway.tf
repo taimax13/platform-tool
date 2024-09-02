@@ -7,7 +7,7 @@ resource "aws_route53_zone" "rout_dns" {
 module "api_gateway" {
   source = "terraform-aws-modules/apigateway-v2/aws"
 
-  name          = "dev-http"
+  name          = "${var.project_name}-${var.environment}-dev-http"
   description   = "My awesome HTTP API Gateway"
   protocol_type = "HTTP"
 
@@ -16,7 +16,6 @@ module "api_gateway" {
     allow_methods = ["*"]
     allow_origins = ["*"]
   }
-
   # Custom domain
   domain_name = var.domain_name
 
