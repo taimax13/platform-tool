@@ -13,7 +13,7 @@ module "vpc" {
   enable_dns_support   = true
 
     # Create NAT Gateway
-  create_nat_gateway = true
+ # create_nat_gateway = true
   single_nat_gateway = true
   public_subnet_tags = {
     "Name" = "Public Subnet"

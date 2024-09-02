@@ -47,3 +47,9 @@ variable "instance_types" {
   type = list(string)
   default = ["m6i.large", "m6a.large", "m7g.large"]
 }
+
+variable "domain_name" {
+  description = "domain name"
+  type = string
+  default = "example.domain.com"
+}
