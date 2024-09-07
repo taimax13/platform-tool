@@ -30,7 +30,7 @@ The function is tested using **unittest** , **moto** (for AWS service mocking) a
 - Uploading the `.md5` file to S3 after processing.
 - Ensuring the temporary file is deleted.
 
-There is 2 lambdas examples:
+There is 2 lambda examples:
 1. to calculate checksum 
 2. to extract checksum from metadata of s3 , without copy file locally
 
@@ -52,8 +52,8 @@ python -m unittest discover tests
 ### Overview
 
 The infrastructure is automated using **Terraform**, which provisions the following AWS resources:
-- **S3 Bucket**: Stores the uploaded files and their MD5 checksum files.
-- **Lambda Function**: Calculates and stores the MD5 checksum.
+- **S3 Bucket module**: Stores the uploaded files and their MD5 checksum files.
+- **Lambda Function module**: Calculates and stores the MD5 checksum.
 - **IAM Role and Policies**: Provides the Lambda function with the necessary permissions to interact with S3.
 - **S3 Event Notification**: Triggers the Lambda function when new objects are uploaded to the S3 bucket.
 
@@ -92,6 +92,7 @@ To deploy the infrastructure using Terraform:
     terraform apply
     ```
 
+PLEASE NOTE - > there is one file per env for lambda in case of multiple accounts
 This will create the necessary resources and configure the S3-to-Lambda trigger.
 
 ### Triggering Lambda for S3 Events
@@ -119,10 +120,11 @@ The S3 event notification to trigger the Lambda function can be configured throu
         }'
      ```
 
-Both methods will set up the S3-to-Lambda trigger apart form possibility to config it in terraform, ensuring the Lambda function runs each time a new file is uploaded to the bucket.
+Both methods will set up the S3-to-Lambda trigger, but in the project they configured it in terraform, 
+ensuring the Lambda function runs each time a new file is uploaded to the bucket.
 
 
-### Updating Lambda Function Code
+### Updating Lambda Function Code - continius delivery, part of CD
 
 To update the code of an already deployed Lambda function, you can use the AWS CLI or Terraform. Below are two approaches:
 
@@ -204,3 +206,4 @@ These unit tests mock S3 interactions, simulating uploads and downloads, and val
 To run unit tests:
 ```bash
 python -m unittest discover tests
+```
