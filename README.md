@@ -151,7 +151,6 @@ To update the code of an already deployed Lambda function, you can use the AWS C
 7. **AWS CLI** (optional):
    - Can be used to manage and update Lambda functions, configure triggers, and more via the command line interface.
 
-
 ### Architecture Diagram
 
 ```mermaid
@@ -161,6 +160,20 @@ graph TD;
     B -->|stores| A;
     B -->|logs| D[CloudWatch Logs];
     E[IAM Role] -->|grants| B;
+    
+    %% Adding colors
+    A[S3 Bucket]:::s3style;
+    B[Lambda Function]:::lambdastyle;
+    C[MD5 Checksum]:::checksumstyle;
+    D[CloudWatch Logs]:::logstyle;
+    E[IAM Role]:::iamstyle;
+
+    %% Style Definitions
+    classDef s3style fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef lambdastyle fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef checksumstyle fill:#fbf,stroke:#333,stroke-width:2px;
+    classDef logstyle fill:#ffb,stroke:#333,stroke-width:2px;
+    classDef iamstyle fill:#bfb,stroke:#333,stroke-width:2px;
 ```
 ## Test Flow
 
