@@ -30,9 +30,9 @@ class TestLambdaHandlerWithLocalStack(unittest.TestCase):
     def tearDown(self):
         # Cleanup: remove the uploaded file and its checksum from the bucket
         objects = self.s3.list_objects_v2(Bucket=self.bucket_name)
-        if 'Contents' in objects:
-            for obj in objects['Contents']:
-                self.s3.delete_object(Bucket=self.bucket_name, Key=obj['Key'])
+        # if 'Contents' in objects:
+        #     for obj in objects['Contents']:
+        #         self.s3.delete_object(Bucket=self.bucket_name, Key=obj['Key'])
 
     @patch('os.remove')
     def test_lambda_handler_with_localstack(self, mock_remove):
