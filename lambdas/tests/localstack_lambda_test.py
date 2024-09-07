@@ -1,40 +1,43 @@
-import moto
 import unittest
+import uuid
+
 import boto3
+import time
 from unittest.mock import patch, mock_open
 from lambdas.checksum import lambda_handler, calculate_md5  # Adjust the import based on your file structure
 
+LOCALSTACK_ENDPOINT_URL = "http://localhost:4566"  # LocalStack endpoint for S3
 
-class TestLambdaHandler(unittest.TestCase):
+class TestLambdaHandlerWithLocalStack(unittest.TestCase):
 
     def setUp(self):
-        # Start Moto's AWS mock (using mock_aws for newer versions)
-        self.mock_aws = moto.mock_aws()  # This mocks all AWS services, including S3
-        self.mock_aws.start()
+        self.s3 = boto3.client('s3', region_name='us-east-1', endpoint_url=LOCALSTACK_ENDPOINT_URL)
 
-        # Create a boto3 S3 client and create a mock S3 bucket
-        self.s3 = boto3.client('s3', region_name='us-east-1')
-        self.bucket_name = 'test-bucket'
-        self.s3.create_bucket(Bucket=self.bucket_name)
+        # Use an existing bucket in LocalStack instead of creating a new one
+        self.bucket_name = 'checksum-source-bucket'
+        self.file_key = f'test_file_{str(uuid.uuid4())[:4]}.txt'
+        self.file_content = 'Hello, world!'
 
         # Upload a mock file to the S3 bucket
-        self.file_key = 'test_file.txt'
-        self.file_content = 'Hello, world!'
         self.s3.put_object(Bucket=self.bucket_name, Key=self.file_key, Body=self.file_content)
+        #self.validate_file()
 
-        # Validate that the file has been uploaded
-        response = self.s3.list_objects_v2(Bucket=self.bucket_name, Prefix=self.file_key)
-        print(response)
-        self.assertEqual(response['KeyCount'], 1, f"File {self.file_key} not found in S3 during setup")
+    def validate_file(self):
+        response = self.s3.list_objects_v2(Bucket=self.bucket_name)
+        self.assertIn('Contents', response, f"File {self.file_key} not found in S3 during setup")
+        print(f"Uploaded file details: {response}")
 
     def tearDown(self):
-        # Stop Moto's AWS mock
-        self.mock_aws.stop()
+        # Cleanup: remove the uploaded file and its checksum from the bucket
+        objects = self.s3.list_objects_v2(Bucket=self.bucket_name)
+        if 'Contents' in objects:
+            for obj in objects['Contents']:
+                self.s3.delete_object(Bucket=self.bucket_name, Key=obj['Key'])
 
-    @patch('boto3.client')  # Mock the entire S3 client
     @patch('os.remove')
-    def test_lambda_handler(self, mock_remove, mock_boto_client):
-        # Arrange: Prepare a mock S3 event
+    def test_lambda_handler_with_localstack(self, mock_remove):
+        print("INTO lambda test")
+        print(self.validate_file())
         event = {
             'Records': [{
                 's3': {
@@ -44,14 +47,10 @@ class TestLambdaHandler(unittest.TestCase):
             }]
         }
 
-        # Mock the download_file method
-        mock_s3_client = mock_boto_client.return_value
-        mock_s3_client.download_file.side_effect = self.mock_download_file  # Simulate download
-
         # Act: Call the lambda handler
         result = lambda_handler(event, None)
 
-        # Print the result to inspect the error
+        # Print the result to inspect the outcome
         print(f"Lambda handler result: {result}")
 
         # Assert: Verify if the response and behavior are as expected
@@ -69,11 +68,6 @@ class TestLambdaHandler(unittest.TestCase):
 
         # Assert: Ensure the temporary file was cleaned up
         mock_remove.assert_called_once_with(f'/tmp/{self.file_key}')
-
-    def mock_download_file(self, Bucket, Key, Filename):
-        """Mock the S3 download_file method"""
-        with open(Filename, 'w') as f:
-            f.write(self.file_content)  # Simulate the file being downloaded
 
     def test_calculate_md5(self):
         # Test the MD5 calculation separately

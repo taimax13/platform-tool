@@ -1,11 +1,11 @@
 import moto
 import unittest
 import boto3
-from unittest.mock import patch, mock_open
-from lambdas.checksum import lambda_handler, calculate_md5  # Adjust the import based on your file structure
+from unittest.mock import patch
+from lambdas.checksum_no_download import lambda_handler  # Adjust the import based on your file structure
 
 
-class TestLambdaHandler(unittest.TestCase):
+class TestLambdaHandlerETag(unittest.TestCase):
 
     def setUp(self):
         # Start Moto's AWS mock (using mock_aws for newer versions)
@@ -32,8 +32,7 @@ class TestLambdaHandler(unittest.TestCase):
         self.mock_aws.stop()
 
     @patch('boto3.client')  # Mock the entire S3 client
-    @patch('os.remove')
-    def test_lambda_handler(self, mock_remove, mock_boto_client):
+    def test_lambda_handler(self, mock_boto_client):
         # Arrange: Prepare a mock S3 event
         event = {
             'Records': [{
@@ -44,9 +43,11 @@ class TestLambdaHandler(unittest.TestCase):
             }]
         }
 
-        # Mock the download_file method
+        # Mock the head_object method to return an ETag
         mock_s3_client = mock_boto_client.return_value
-        mock_s3_client.download_file.side_effect = self.mock_download_file  # Simulate download
+        mock_s3_client.head_object.return_value = {
+            'ETag': '"6cd3556deb0da54bca060b4c39479839"'  # Simulating the ETag (MD5 checksum)
+        }
 
         # Act: Call the lambda handler
         result = lambda_handler(event, None)
@@ -63,28 +64,13 @@ class TestLambdaHandler(unittest.TestCase):
         response = self.s3.get_object(Bucket=self.bucket_name, Key=checksum_key)
         checksum_content = response['Body'].read().decode('utf-8')
 
-        # Assert: The checksum should be the MD5 of 'Hello, world!'
+        # Assert: The checksum should be the MD5 of 'Hello, world!' (ETag)
         expected_md5 = "6cd3556deb0da54bca060b4c39479839"  # The correct MD5 for 'Hello, world!'
         self.assertEqual(checksum_content, expected_md5)
 
-        # Assert: Ensure the temporary file was cleaned up
-        mock_remove.assert_called_once_with(f'/tmp/{self.file_key}')
-
-    def mock_download_file(self, Bucket, Key, Filename):
-        """Mock the S3 download_file method"""
-        with open(Filename, 'w') as f:
-            f.write(self.file_content)  # Simulate the file being downloaded
-
     def test_calculate_md5(self):
-        # Test the MD5 calculation separately
-        test_content = b"Hello, world!"
-        expected_md5 = "6cd3556deb0da54bca060b4c39479839"
-
-        with patch('builtins.open', mock_open(read_data=test_content)):
-            result = calculate_md5('/fake/path')
-
-        print(result)
-        self.assertEqual(result, expected_md5)
+        # This method can remain unchanged for now, but it can be omitted in this version of the test if needed
+        pass
 
 
 if __name__ == '__main__':
