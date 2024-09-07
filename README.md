@@ -151,6 +151,7 @@ To update the code of an already deployed Lambda function, you can use the AWS C
 7. **AWS CLI** (optional):
    - Can be used to manage and update Lambda functions, configure triggers, and more via the command line interface.
 
+
 ### Architecture Diagram
 
 ```mermaid
@@ -161,7 +162,7 @@ graph TD;
     B -->|Logs to CloudWatch| D[CloudWatch Logs];
     E[IAM Role] -->|Grants Permissions| B;
     
-    %% Adding colors and rounded corners
+    %% Adding colors, rounded corners, and dark grey text
     A[S3 Bucket]:::s3style;
     B[Lambda Function]:::lambdastyle;
     C[MD5 Checksum]:::checksumstyle;
@@ -169,11 +170,12 @@ graph TD;
     E[IAM Role]:::iamstyle;
 
     %% Style Definitions
-    classDef s3style fill:#f9f,stroke:#333,stroke-width:2px,stroke-linecap:round;
-    classDef lambdastyle fill:#bbf,stroke:#333,stroke-width:2px,stroke-linecap:round;
-    classDef checksumstyle fill:#fbf,stroke:#333,stroke-width:2px,stroke-linecap:round;
-    classDef logstyle fill:#ffb,stroke:#333,stroke-width:2px,stroke-linecap:round;
-    classDef iamstyle fill:#bfb,stroke:#333,stroke-width:2px,stroke-linecap:round;
+    classDef s3style fill:#f9f,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
+    classDef lambdastyle fill:#bbf,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
+    classDef checksumstyle fill:#fbf,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
+    classDef logstyle fill:#ffb,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
+    classDef iamstyle fill:#bfb,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
+
 ```
 ## Test Flow
 
