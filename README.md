@@ -1,596 +1,184 @@
-# Hello World Application with Monitoring and Logging
+# AWS S3 Checksum Calculation Solution
 
-This repository contains a Helm chart for deploying a "Hello World" application on a Kubernetes cluster, along with integrated monitoring and logging features using AWS CloudWatch and Grafana.
+## Objective
 
-## Table of Contents
+To design, propose, and implement a solution that calculates a checksum (MD5) for newly uploaded objects to an AWS S3 bucket. The solution stores the checksum file with the same prefix but with an `.md5` extension, ensuring high availability and durability. The solution is implemented using **Infrastructure as Code (IaC)** with **Terraform**.
 
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Deploying the Helm Chart](#deploying-the-helm-chart)
-- [Monitoring and Logging](#monitoring-and-logging)
-- [Accessing Grafana Dashboard](#accessing-grafana-dashboard)
-- [Uninstalling](#uninstalling)
+---
 
-## Prerequisites
+## 1. Lambda Function Description and Testing
 
-Before you begin, ensure you have the following:
+### Lambda Function Overview
 
-- Ready AWS account
-- Helm installed on  local machine
-- AWS CLI configured with appropriate permissions
-- Access to AWS CloudWatch and Grafana
-- Terraform 
+The Lambda function is triggered when a new file is uploaded to the S3 bucket. It performs the following:
 
-## Installation
+- Downloads the uploaded file.
+- Calculates its MD5 checksum.
+- Uploads the checksum as a new file with the same prefix but with an `.md5` extension.
+- Deletes the temporary file used in the Lambda's execution environment.
 
-### 1. Clone the Repository
+### Key AWS Services:
 
-Clone this repository to  local machine:
+- **AWS Lambda**: Executes the checksum calculation.
+- **AWS S3**: Stores files and the corresponding checksum files.
+- **IAM**: Manages permissions for Lambda to interact with S3.
 
-```code
-  git clone https://github.com/taimax13/platform-tool/tree/t/assignement
-  cd deployment
-```
-### 2. Add the NGINX Ingress Controller (if needed)
- NGINX Ingress Controller, to install if needed:
-```code
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
+### Testing the Lambda Function
 
-helm install ingress-nginx ingress-nginx/ingress-nginx \
-  --set controller.publishService.enabled=true \
-  --set controller.service.type=LoadBalancer
-```
-## Configuration
-values.yaml
-The values.yaml file contains default values for the Helm chart. Can be customize these settings to match  environment:
+The function is tested using **unittest** , **moto** (for AWS service mocking) and using **localstack** resources. The tests cover:
+- Correct MD5 checksum calculation.
+- Uploading the `.md5` file to S3 after processing.
+- Ensuring the temporary file is deleted.
 
+There is 2 lambdas examples:
+1. to calculate checksum 
+2. to extract checksum from metadata of s3 , without copy file locally
 
-```yaml
-
-replicas: 3
-
-image:
-  repository: nginxdemos/hello
-  tag: latest
-
-service:
-  type: ClusterIP
-  port: 3000
-  targetPort: 8080
-
-ingress:
-  enabled: true
-  hostname: domain.com
-  tlsSecretName: my-tls-secret
-
-cloudwatch:
-  enabled: true
-  logGroupName: "/aws/api-gateway/example"
-  retentionInDays: 14
-
-grafana:
-  enabled: true
-  dashboardName: "lambda-monitoring-dashboard"
-  lambdaFunctionName: "_lambda_function_name"
-```
-Environment-Specific Settings
-Can be override by any value in values.yaml during deployment by using the --set flag or providing a custom values file.
-
-Deploying the Helm Chart
-To deploy the Helm chart, run the following command:
+To run the tests:
 
 ```bash
-
-helm install hello-world ./hello-world
-```
-This command will deploy the application, configure CloudWatch logging, and set up the Grafana dashboard if enabled.
-
-### Monitoring and Logging
-CloudWatch Logging
-CloudWatch logging is enabled for API Gateway by default. Logs are directed to the specified log group in the values.yaml file.
-
-Grafana Dashboard
-If enabled, the Helm chart will create a ConfigMap that contains a pre-configured Grafana dashboard to monitor Lambda function metrics such as:
-
-Invocation Count
-Error Count
-Average Duration
-Accessing Grafana Dashboard
-If you have Grafana installed, Can be import the dashboard from the ConfigMap created by this Helm chart:
-
-Port-forward the Grafana service to  local machine:
-
-bash
-```
-kubectl port-forward service/grafana 3000:80
-```
-Open  browser and navigate to http://localhost:3000.
-
-Log in with  Grafana credentials.
-
-Import the dashboard by using the JSON provided in the ConfigMap.
-
-## Architecture Diagram
-
-### Lambdas
-#  Project Title
-
-## Architecture Diagram
-
-### API-Getaway , Lambda, DynamoDB
-
-```mermaid
-graph TD
-    A[Client] -->|HTTP Request| B[API Gateway]
-    B -->|Trigger| C[AWS Lambda]
-    C -->|CRUD Operations| D[DynamoDB]
-    
-    subgraph "API Endpoints"
-    E[Create Item]
-    F[Get Item]
-    G[Delete Item]
-    end
-    
-    B --> E
-    B --> F
-    B --> G
-    
-    E --> C
-    F --> C
-    G --> C
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
-    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
-    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
-    style D fill:#fbb,stroke:#333,stroke-width:2px,color:#000
-```    
-
-### Networking
-I've created a diagram that illustrates the networking configuration for  serverless web application. Here's an explanation of the components and their relationships:
-VPC (Virtual Private Cloud):
-
-Contains both public and private subnets
-Provides network isolation for  resources
-
-Public Subnet:
-Contains the Internet Gateway and NAT Gateway
-Allows resources to have direct internet access
-
-
-Private Subnet:
-Contains the Lambda functions
-Provides additional security by not exposing resources directly to the internet
-
-Internet Gateway (IG):
-Allows communication between the VPC and the internet
-Enables inbound and outbound internet access for the public subnet
-
-NAT Gateway:
-Located in the public subnet
-Allows resources in the private subnet to access the internet while remaining private
-
-Lambda Functions:
-Deployed in the private subnet
-Can access the internet through the NAT Gateway
-Can also access other AWS services like DynamoDB
-
-DynamoDB:
-Shown within the VPC for illustration, but it's actually a fully managed AWS service
-Lambda functions can access DynamoDB through VPC endpoints or over the internet
-
-API Gateway:
-Not part of the VPC but shown to illustrate how it invokes the Lambda functions
-
-# VOCAL POINT: 
-Lambda Function VPC Association:
-
-By default, Lambda functions run in an AWS-managed VPC with internet access.
-When you associate a Lambda function with  VPC, it loses direct internet access for added security.
-The function now uses the VPC's networking, including its route tables and subnets.
-
-
-Placement in Private Subnet:
-Placing the Lambda function in a private subnet of  VPC.
-Private subnets don't have a route to the internet gateway, preventing direct internet access.
-
-NAT Gateway in Public Subnet:
-A NAT (Network Address Translation) Gateway is deployed in a public subnet of  VPC.
-The public subnet has a route to the internet gateway, allowing internet access.
-
-
-Route Table Configuration:
-
-The private subnet's route table is configured with a route that sends internet-bound traffic (0.0.0.0/0) to the NAT Gateway.
-
-
-Outbound Internet Access Process:
-
-When the Lambda function needs to make an internet request:
-a. It sends the request to the NAT Gateway (as per the route table).
-b. The NAT Gateway translates the private IP of the Lambda function to its own public IP.
-c. The request is then sent out to the internet through the Internet Gateway.
-d. When the response comes back, the NAT Gateway translates it back and forwards it to the Lambda function.
-
-Security Group Configuration:
-The Lambda function's security group should allow outbound traffic.
-The NAT Gateway doesn't require specific security group rules for outbound traffic.
-
-
-This setup achieves several things:
-
-It allows Lambda functions to access internet resources (e.g., external APIs, package repositories).
-It keeps the Lambda functions secure in a private subnet, not directly exposed to the internet.
-It centralizes outbound internet access through the NAT Gateway, making it easier to monitor and control.
-
-It's worth noting that this configuration adds some complexity and potential cost (NAT Gateway charges), so it's typically used when you need both VPC access for  Lambda functions and outbound internet access. If you don't need VPC resources, Lambda functions can be left outside the VPC for simpler internet access.
-
-### The architecture of the deployment is shown below:
-
-```mermaid
-graph TB
-    subgraph "VPC"
-        subgraph "Public Subnet"
-            IG[Internet Gateway]
-            NATGW[NAT Gateway]
-        end
-        subgraph "Private Subnet"
-            Lambda[Lambda Functions]
-            DDB[(DynamoDB)]
-        end
-    end
-    
-    Internet((Internet)) <-->|Public Traffic| IG
-    IG <--> NATGW
-    NATGW <-->|Private Traffic| Lambda
-    Lambda <--> DDB
-    
-    API[API Gateway] -->|Invokes| Lambda
-    
-    style Internet fill:#f9f,stroke:#333,stroke-width:2px,color:#000
-    style IG fill:#85C1E9,stroke:#333,stroke-width:2px,color:#000
-    style NATGW fill:#85C1E9,stroke:#333,stroke-width:2px,color:#000
-    style Lambda fill:#82E0AA,stroke:#333,stroke-width:2px,color:#000
-    style DDB fill:#F8C471,stroke:#333,stroke-width:2px,color:#000
-    style API fill:#BB8FCE,stroke:#333,stroke-width:2px,color:#000
+python -m unittest discover tests
 ```
 
-### Multy-tenancy
+## Infrastructure as Code (IaC) with Terraform
 
-Client Authentication and Authorization:
+### Overview
 
-The client authenticates using AWS Cognito, which provides user management and authentication services.
-Cognito issues JWT tokens that include claims about the user, including their tenant ID.
+The infrastructure is automated using **Terraform**, which provisions the following AWS resources:
+- **S3 Bucket**: Stores the uploaded files and their MD5 checksum files.
+- **Lambda Function**: Calculates and stores the MD5 checksum.
+- **IAM Role and Policies**: Provides the Lambda function with the necessary permissions to interact with S3.
+- **S3 Event Notification**: Triggers the Lambda function when new objects are uploaded to the S3 bucket.
 
-API Gateway and Lambda:
-The authenticated client sends requests to API Gateway.
-API Gateway invokes a Lambda function, passing along the authentication token.
+### Terraform Components
 
-Lambda Function:
-The Lambda function is placed in a private subnet within a VPC for security.
-It assumes an IAM role that grants it necessary permissions.
-The function verifies the Cognito token and extracts the tenant ID.
-It retrieves RDS credentials from AWS Secrets Manager.
+#### 1. Lambda Configuration
 
-Amazon RDS PostgreSQL:
-The RDS instance is also placed in a private subnet within the VPC.
-It's configured with row-level security (RLS) policies.
+Defines the **Lambda function** with:
+- The handler and runtime (Python 3.8).
+- The environment variables (S3 bucket name).
+- The path to the code zip file deployed via Terraform.
 
-Secure Access to RDS:
-The Lambda function connects to RDS using credentials from Secrets Manager.
-Network access is controlled via security groups within the VPC.
+#### 2. S3 Bucket and Notification
 
-Row-Level Security in PostgreSQL:
-RLS policies are set up in PostgreSQL to filter rows based on the tenant ID.
-When the Lambda function connects to the database, it sets the current tenant context (e.g., SET app.current_tenant = 'tenant_id';).
-RLS policies use this context to filter query results, ensuring each tenant only sees their own data.
+Creates the **S3 bucket** and configures the event notification to trigger the Lambda function on any `s3:ObjectCreated` event.
 
+#### 3. IAM Role and Policies
 
-Query Execution:
-The Lambda function constructs and executes queries against RDS.
-PostgreSQL's RLS automatically applies tenant-specific filters to all queries.
+Sets up an **IAM role** and policies to grant the Lambda function the following permissions:
+- **Read**: To download files from the S3 bucket.
+- **Write**: To upload the calculated MD5 checksum back to the S3 bucket.
 
-
-Data Isolation:
-Even if a query doesn't explicitly filter by tenant, the RLS ensures that only data belonging to the current tenant is returned.
-
-```mermaid
-graph TD
-    A[Client] -->|Authenticated Request| B[API Gateway]
-    B -->|Invoke| C[Lambda Function]
-    C -->|Query with Tenant Context| D[(Amazon RDS PostgreSQL)]
-    E[AWS Cognito] -->|Authenticate & Authorize| C
-    
-    subgraph VPC
-        subgraph "Private Subnet"
-            C
-            D
-        end
-    end
-    
-    F[IAM Role] -->|Assume| C
-    G[Secrets Manager] -->|RDS Credentials| C
-    
-    subgraph "PostgreSQL"
-        H[Row-Level Security]
-    end
-    D --> H
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
-    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
-    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
-    style D fill:#fbb,stroke:#333,stroke-width:2px,color:#000
-    style E fill:#fbf,stroke:#333,stroke-width:2px,color:#000
-    style F fill:#ccf,stroke:#333,stroke-width:2px,color:#000
-    style G fill:#cff,stroke:#333,stroke-width:2px,color:#000
-    style H fill:#fcb,stroke:#333,stroke-width:2px,color:#000
-```
-
-### Architecture   EKS
-
-# Setting Up an EKS Cluster: (there is a terraform module as well , weapon of choice )
-
-The EKS (Elastic Kubernetes Service) cluster is created using AWS services.
-It consists of multiple worker nodes (EC2 instances) that run  containerized applications.
-kubectl is configured to connect to this EKS cluster, allowing you to manage Kubernetes objects.
-
-
-# Deploying a Sample Application:
-
-A Deployment object is used to manage the application pods. This ensures a specified number of pod replicas are running at all times.
-Pods (labeled Pod 1, Pod 2, Pod N in the diagram) run  "Hello World" application containers.
-A Service object exposes these pods, making them accessible within the cluster or externally.
-An Ingress object (not shown in detail) can be used to manage external access to the services.
-
-
-Implementing Monitoring:
-
-Prometheus is deployed within the EKS cluster to collect metrics from  application and cluster.
-Grafana is also deployed in the cluster and configured to use Prometheus as a data source for visualizing the collected metrics.
-
-
-
-# Detailed Steps:
-
-Setting Up EKS and kubectl:
-### Create EKS cluster
-```eksctl create cluster --name my-cluster --region us-west-2```
-
-# Configure kubectl
-```aws eks get-token --cluster-name my-cluster | kubectl apply -f -```
-
-Deploying the Sample Application:
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hello-world
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: hello-world
-  template:
-    metadata:
-      labels:
-        app: hello-world
-    spec:
-      containers:
-      - name: hello-world
-        image: nginx:latest
-        ports:
-        - containerPort: 80
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: hello-world-service
-spec:
-  selector:
-    app: hello-world
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: LoadBalancer
-```
 
-# Apply the configuration:
-```kubectl apply -f hello-world-deployment.yaml```
+### Deployment
 
-# Implementing Monitoring:
+To deploy the infrastructure using Terraform:
 
-Install Prometheus and Grafana using Helm:
-Add Helm repos
-```bash 
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
+1. Initialize Terraform:
+    ```bash
+    terraform init
+    ```
 
-# Install Prometheus
-helm install prometheus prometheus-community/prometheus
+2. Apply the configuration:
+    ```bash
+    terraform apply
+    ```
 
-# Install Grafana
-helm install grafana grafana/grafana
-```
-Configure Grafana to use Prometheus as a data source:
+This will create the necessary resources and configure the S3-to-Lambda trigger.
 
-Get Grafana admin password:
-```kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 --decode```
+### Triggering Lambda for S3 Events
 
-Port-forward Grafana service:
-``````kubectl port-forward service/grafana 3000:80 ``````
+The S3 event notification to trigger the Lambda function can be configured through **Terraform** by setting up a notification for `s3:ObjectCreated` events. Alternatively, you can create the Lambda trigger manually in the AWS Console or through the AWS CLI by following these steps:
 
-Access Grafana UI at http://localhost:3000, add Prometheus as a data source, and create dashboards.
+1. **AWS Console**:
+   - Go to the **S3 bucket** in the AWS Management Console.
+   - Navigate to the **Properties** tab.
+   - Scroll down to the **Event notifications** section and add a new notification.
+   - Select the event type (e.g., `All object create events`) and choose the **Lambda function** to trigger.
 
-```mermaid
-graph TD
-    A[User] -->|Access| B[Load Balancer]
-    B --> C[EKS Cluster]
-    
-    subgraph "EKS Cluster"
-        D[Worker Node 1]
-        E[Worker Node 2]
-        F[Worker Node N]
-        
-        subgraph "Kubernetes Objects"
-            G[Deployment]
-            H[Service]
-            I[Ingress]
-        end
-        
-        subgraph "Monitoring"
-            J[Prometheus]
-            K[Grafana]
-        end
-        
-        subgraph "Security Components"
-            P[IAM Roles]
-            Q[Network Policies]
-            R[Secrets Management]
-        end
-    end
-    
-    G -->|Manages| L[Pod 1]
-    G -->|Manages| M[Pod 2]
-    G -->|Manages| N[Pod N]
-    
-    H -->|Exposes| L
-    H -->|Exposes| M
-    H -->|Exposes| N
-    
-    J -->|Scrapes Metrics| L
-    J -->|Scrapes Metrics| M
-    J -->|Scrapes Metrics| N
-    
-    K -->|Queries| J
-    
-    O[kubectl] -.->|Manages| C
-    
-    P -->|Assigned To| D
-    P -->|Assigned To| E
-    P -->|Assigned To| F
-    
-    Q -->|Controls Traffic| G
-    Q -->|Controls Traffic| H
-    Q -->|Controls Traffic| I
-    
-    R -->|Secures| L
-    R -->|Secures| M
-    R -->|Secures| N
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
-    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
-    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
-    style D fill:#ddd,stroke:#333,stroke-width:2px,color:#000
-    style E fill:#ddd,stroke:#333,stroke-width:2px,color:#000
-    style F fill:#ddd,stroke:#333,stroke-width:2px,color:#000
-    style G fill:#fbb,stroke:#333,stroke-width:2px,color:#000
-    style H fill:#fbf,stroke:#333,stroke-width:2px,color:#000
-    style I fill:#bff,stroke:#333,stroke-width:2px,color:#000
-    style J fill:#ff9,stroke:#333,stroke-width:2px,color:#000
-    style K fill:#9ff,stroke:#333,stroke-width:2px,color:#000
-    style L fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-    style M fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-    style N fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-    style O fill:#cff,stroke:#333,stroke-width:2px,color:#000
-    style P fill:#f99,stroke:#333,stroke-width:2px,color:#000
-    style Q fill:#9f9,stroke:#333,stroke-width:2px,color:#000
-    style R fill:#99f,stroke:#333,stroke-width:2px,color:#000
+2. **AWS CLI**:
+   - Use the `aws s3api` command to configure the notification:
+     ```bash
+     aws s3api put-bucket-notification-configuration \
+        --bucket <bucket-name> \
+        --notification-configuration '{
+          "LambdaFunctionConfigurations": [
+            {
+              "LambdaFunctionArn": "<lambda-function-arn>",
+              "Events": ["s3:ObjectCreated:*"]
+            }
+          ]
+        }'
+     ```
+
+Both methods will set up the S3-to-Lambda trigger apart form possibility to config it in terraform, ensuring the Lambda function runs each time a new file is uploaded to the bucket.
 
 
-```
+### Updating Lambda Function Code
 
-## Security Components Subgraph:
+To update the code of an already deployed Lambda function, you can use the AWS CLI or Terraform. Below are two approaches:
 
-IAM Roles: Connected to the worker nodes to signify secure access management.
-Network Policies: Connected to the Kubernetes objects to enforce traffic control.
-Secrets Management: Connected to the Pods, indicating secure handling of sensitive information.
-Visual Enhancements:
+1. **Using AWS CLI**:
+   You can update the Lambda function code by providing the new deployment package (zip file) with the following command:
 
-Each security component has been given a distinct color to differentiate it from the other elements and highlight its importance.
+   ```bash
+   aws lambda update-function-code \
+       --function-name <lambda-function-name> \
+       --zip-file fileb://<path-to-zip-file> 
+   ```
 
-### Monitoring and logging
+### AWS Services Used
 
-Monitoring and Logging Setup for Lambda Functions and API Gateway
+1. **AWS Lambda**: 
+   - Runs the serverless function to process and calculate the MD5 checksum for newly uploaded files.
 
-Overview: This document describes the setup for monitoring AWS Lambda functions and enabling detailed logging for API Gateway requests and responses. The setup includes the use of CloudWatch for monitoring and logging, and Grafana for visualizing key metrics.
+2. **Amazon S3**:
+   - Stores the uploaded files and the corresponding checksum files (.md5). It also triggers the Lambda function using event notifications.
 
-1. Monitoring Lambda Functions:
+3. **IAM (Identity and Access Management)**:
+   - Manages roles and permissions required for Lambda to interact with S3. Specifically, IAM roles grant `s3:GetObject`, `s3:PutObject`, and `s3:ListBucket` permissions to the Lambda function.
 
-CloudWatch Log Groups:
+4. **Amazon CloudWatch Logs**:
+   - Collects and monitors logs from the Lambda function for debugging and monitoring purposes.
 
-Each Lambda function is automatically assigned a CloudWatch log group where logs are stored.
-Navigate to the CloudWatch Console > Log groups to view logs.
-CloudWatch Alarms:
+5. **Terraform**:
+   - Used to provision and manage the infrastructure, including S3 buckets, Lambda functions, IAM roles, and policies.
 
-Alarms have been set up to monitor the following metrics:
-Invocations: Tracks the number of times the Lambda function is invoked.
-Errors: Monitors the count of errors.
-Duration: Tracks the execution time of the Lambda function.
-Accessing Logs and Metrics:
+6. **LocalStack** (optional for local testing):
+   - A fully functional local AWS cloud stack used for running and testing the entire setup locally before deployment to AWS.
 
-Logs can be accessed through the CloudWatch Console by selecting the relevant log group.
-Metrics and alarms can be viewed and managed in the CloudWatch "Metrics" and "Alarms" sections.
-2. Grafana Dashboard:
+7. **AWS CLI** (optional):
+   - Can be used to manage and update Lambda functions, configure triggers, and more via the command line interface.
 
-Data Source:
-A CloudWatch data source has been configured in Grafana to pull metrics directly from AWS.
-Dashboard Panels:
-The Grafana dashboard includes panels for the following metrics:
-Invocation Count
-Error Count
-Average Duration
-Accessing the Dashboard:
-The Grafana dashboard can be accessed via the Grafana console under the "Dashboards" section.
-3. Detailed Logging for API Gateway:
 
-API Gateway Logging:
-
-Detailed logging for API Gateway requests and responses is enabled and logs are sent to a specific CloudWatch log group.
-The logging level is set to INFO to capture essential details without overwhelming log storage.
-Accessing API Logs:
-
-Logs can be accessed through the CloudWatch Console > Log groups > [ API Gateway log group].
-Conclusion: The monitoring setup ensures that key metrics and logs are easily accessible, providing visibility into the performance and behavior of  AWS Lambda functions and API Gateway. The Grafana dashboard offers a visual representation of the critical metrics, allowing for proactive monitoring and quick troubleshooting.
+### Architecture Diagram
 
 ```mermaid
-graph TD
-    subgraph "AWS Cloud Environment"
-        A[Lambda Function] -->|Sends Logs| B[CloudWatch Log Group]
-        B -->|Monitors| C[CloudWatch Alarms]
-        A -->|Sends Metrics| D[CloudWatch Metrics]
-        subgraph "API Gateway"
-            E[API Requests] -->|Logs Requests/Responses| F[API Gateway Logs]
-            F -->|Stores Logs| B
-        end
-    end
-    
-    subgraph "Grafana Dashboard"
-        G[CloudWatch Data Source] -->|Pulls Metrics| H[Invocation Count Panel]
-        G -->|Pulls Metrics| I[Error Count Panel]
-        G -->|Pulls Metrics| J[Average Duration Panel]
-        G -->|Pulls Logs| K[API Gateway Logs Panel]
-    end
-    
-    B -.->|Stores Logs| G
-    D -.->|Provides Metrics| G
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px,color:#000
-    style B fill:#bbf,stroke:#333,stroke-width:2px,color:#000
-    style C fill:#bfb,stroke:#333,stroke-width:2px,color:#000
-    style D fill:#ddd,stroke:#333,stroke-width:2px,color:#000
-    style E fill:#fbf,stroke:#333,stroke-width:2px,color:#000
-    style F fill:#fbb,stroke:#333,stroke-width:2px,color:#000
-    style G fill:#9ff,stroke:#333,stroke-width:2px,color:#000
-    style H fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-    style I fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-    style J fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-    style K fill:#fdb,stroke:#333,stroke-width:2px,color:#000
-
+graph TD;
+    A[S3 Bucket] -->|uploads| B[Lambda Function];
+    B -->|calculates| C[MD5 Checksum];
+    B -->|stores| A;
+    B -->|logs| D[CloudWatch Logs];
+    E[IAM Role] -->|grants| B;
 ```
+## Test Flow
 
-Thank you!
+###  Testing
 
+For testing, I used Python's `unittest` framework along with **Moto**, which provides a mock version of AWS services like S3. This allowed us to run isolated tests without needing an actual AWS environment. The unit tests ensure:
 
+1. **Correct MD5 Checksum Calculation**: 
+   - Verifies the MD5 checksum is accurately calculated based on the file content.
+   
+2. **File Upload and Checksum Generation**:
+   - Ensures that the `.md5` file is correctly uploaded to the S3 bucket after the checksum calculation.
+   
+3. **Temporary File Cleanup**:
+   - Confirms that any temporary files created during the Lambda function's execution are deleted afterward.
+
+These unit tests mock S3 interactions, simulating uploads and downloads, and validate that the Lambda behaves as expected under controlled conditions.
+
+To run unit tests:
+```bash
+python -m unittest discover tests

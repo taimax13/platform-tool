@@ -8,48 +8,9 @@ variable "environment" {
   type        = string
 }
 
-variable "db_username" {
-  description = "The username for the database."
-  type        = string
-  sensitive   = true
-}
-
-variable "db_password" {
-  description = "The password for the database."
-  type        = string
-  sensitive   = true
-}
-
-variable "db_name" {
-  description = "The name of the database."
-  type        = string
-}
-
 variable "aws_region" {
   description = "The AWS region to deploy to."
   type        = string
   default     = "us-west-2"
 }
 
-variable "lambda_functions" {
-  description = "List of Lambda functions with their configurations"
-  type = list(object({
-    name           = string
-    handler        = string
-    filename       = string
-    source_code_hash = string
-    environment    = map(string)
-  }))
-}
-
-variable "instance_types" {
-  description = "List of instance types for the EKS node group"
-  type = list(string)
-  default = ["m6i.large", "m6a.large", "m7g.large"]
-}
-
-variable "domain_name" {
-  description = "domain name"
-  type = string
-  default = "example.domain.com"
-}
