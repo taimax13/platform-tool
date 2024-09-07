@@ -34,6 +34,12 @@ There is 2 lambdas examples:
 1. to calculate checksum 
 2. to extract checksum from metadata of s3 , without copy file locally
 
+```ETag in S3:
+For most files, ETag is the MD5 checksum of the object. However, there are a few exceptions:
+Multipart uploads: If a file is uploaded in parts (e.g., a large file that’s broken into smaller chunks for faster upload), the ETag will not be the MD5 checksum of the entire file. Instead, it represents a combination of the checksums of individual parts.
+Server-side encryption: If you use server-side encryption (SSE), the ETag won’t be the simple MD5 of the object, because the content is encrypted.
+```
+
 To run the tests:
 
 ```bash
