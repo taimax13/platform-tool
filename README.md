@@ -165,26 +165,34 @@ To update the code of an already deployed Lambda function, you can use the AWS C
 
 ```mermaid
 graph TD;
-    A[S3 Bucket] -->|File Uploads| B[Lambda Function];
-    B -->|Calculates MD5| C[MD5 Checksum];
-    B -->|Stores Checksum| A;
-    B -->|Logs to CloudWatch| D[CloudWatch Logs];
-    E[IAM Role] -->|Grants Permissions| B;
+    A("S3 Bucket")
+    B("Lambda Function")
+    C("MD5 Checksum")
+    D("CloudWatch Logs")
+    E("IAM Role")
+    
+    A -->|File Uploads| B
+    B -->|Calculates MD5| C
+    B -->|Stores Checksum| A
+    B -->|Logs to CloudWatch| D
+    E -->|Grants Permissions| B
     
     %% Adding colors, rounded corners, and dark grey text
-    A[S3 Bucket]:::s3style;
-    B[Lambda Function]:::lambdastyle;
-    C[MD5 Checksum]:::checksumstyle;
-    D[CloudWatch Logs]:::logstyle;
-    E[IAM Role]:::iamstyle;
+    A:::s3style
+    B:::lambdastyle
+    C:::checksumstyle
+    D:::logstyle
+    E:::iamstyle
 
     %% Style Definitions
-    classDef s3style fill:#f9f,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
-    classDef lambdastyle fill:#bbf,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
-    classDef checksumstyle fill:#fbf,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
-    classDef logstyle fill:#ffb,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
-    classDef iamstyle fill:#bfb,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333;
+    classDef s3style fill:#f9f,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333
+    classDef lambdastyle fill:#bbf,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333
+    classDef checksumstyle fill:#fbf,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333
+    classDef logstyle fill:#ffb,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333
+    classDef iamstyle fill:#bfb,stroke:#333,stroke-width:2px,stroke-linecap:round,color:#333
 
+    linkStyle default stroke:#232F3E,stroke-width:2px
+    linkStyle 4 stroke:#232F3E,stroke-width:2px,stroke-dasharray: 5 5
 ```
 ## Test Flow
 
